@@ -1,0 +1,191 @@
+---
+title: "M05-Visualizing Data with Tables"
+author: "Kevin Bachez"
+date: today
+format: 
+  html: 
+    toc: true
+    toc-depth: 3
+    toc-expand: true
+    number-sections: true
+    code-link: true
+    code-tools: true
+    code-overflow: wrap
+    embed-resources: true
+    theme: cosmo
+editor: visual
+execute: 
+  freeze: auto
+  echo: true
+  warning: false
+  message: false
+---
+
+# Essay Response
+
+## Prompt 3.1: Write a Short Essay
+
+### Prompt: Summarize what you learned from the videos you watched.
+
+From the videos, I learned that tables are an important way to visualize data. Tables are helpful and useful because they organize information clearly and it allows readers to compare exact values. Although charts are helpful when showing trends and patterns, tables are helpful when the reader/audience needs detailed numbers. I also learned how the '{gt}' package in R can be used to create tables that are both professional and customizable. The video taught me how to add titles, subtitles, column labels, source notes, footnotes, formatted numbers, fonts, borders, colors, and so much more. The video also introduced me to the '{gtExtras}' package which allows for even more customization of tables. I learned that tables can be used to visualize data in a way that is both informative and visually appealing. Overall, I learned that tables are a powerful tool for data visualization and can be used to effectively communicate information to an audience.
+
+### Prompt: What did you like about the gt and gtExtra packages demonstrated in the videos?
+
+I liked that the '{gt}' and '{gtExtras}' packages allow for a lot of customization when creating tables. The ability to add titles, subtitles, column labels, source notes, footnotes, formatted numbers, fonts, borders, colors, and more makes it easy to create professional looking tables that are tailored to the specific needs of the data being presented. I also appreciated how user friendly the packages are, making it easy for someone with limited coding experience to create visually appealing tables. Also, the '{gtExtras}' package provides even more options for customization, allowing for a greater level of creativity in table design.
+
+## Prompt: How do tables complement charts for data visualization?
+
+Tables complement charts because they provide exact values that most charts may not show clearly. A chart is useful when the goal of a task is to quickly show a trend, relationship, or a patter. However, a table is useful when the goal is to show detailed values and allow the audience to compare the numbers carefully.
+
+### Prompt: Under what circumstances would you prefer to use tables rather than charts to visualize data?
+
+I would prefer to use tables rather than charts to visualize data when the main focus or whats high priority is having exact numbers. For example, if I were presenting a report to a client and they needed to see the exact values of sales for each month, I would use a table to present that information.
+
+# Table Example Using Synthetic Data
+
+## Prompt 3.2: Use Syntetic Data and Create a Table with `{gt}` and `{gtExtras}`
+
+### Load Packages
+
+```{r}
+library(tidyverse)
+library(gt)
+library(gtExtras)
+```
+
+## Create Synthetic Marketing Data
+
+```{r}
+set.seed(123)
+
+marketing_data <- tibble(
+  customer_id = 1:150,
+  segment = sample(
+    c("Budget", "Standard", "Premium"),
+    150,
+    replace = TRUE
+  ),
+  gender = sample(
+    c("Female", "Male"),
+    150,
+    replace = TRUE
+  ),
+  monthly_spend = round(
+    rnorm(
+      150,
+      mean = 90,
+      sd = 25
+    ),
+    2
+  ),
+  satisfaction = round(
+    runif(
+      150,
+      min = 3,
+      max = 5
+    ),
+    2
+  ),
+  purchase_frequency = sample(
+    1:12,
+    150,
+    replace = TRUE
+  )
+)
+
+marketing_data <-
+  marketing_data |>
+  mutate(
+    monthly_spend =
+      if_else(
+        monthly_spend < 10,
+        10,
+        monthly_spend
+      )
+  )
+```
+
+## Wrangle the Data
+
+```{r}
+segment_summary <-
+  marketing_data |>
+  group_by(segment) |>
+  summarize(
+    customers = n(),
+    average_spending =
+      mean(monthly_spend),
+    total_revenue =
+      sum(monthly_spend),
+    average_satisfaction =
+      mean(satisfaction),
+    average_purchases =
+      mean(purchase_frequency),
+    .groups = "drop"
+  )
+
+segment_summary
+```
+
+## Create the Customized Table
+
+```{r}
+segment_summary |>
+  gt(rowname_col = "segment") |>
+  tab_header(
+    title = md("**Customer Segment Summary**"),
+    subtitle = "Synthetic Marketing Data"
+  ) |>
+  tab_stubhead(
+    label = "Customer Segment"
+  ) |>
+  tab_spanner(
+    label = "Financial Metrics",
+    columns = c(average_spending, total_revenue)
+  ) |>
+  tab_spanner(
+    label = "Customer Metrics",
+    columns = c(average_satisfaction, average_purchases)
+  ) |>
+  cols_label(
+    customers = "Customers",
+    average_spending = "Average Monthly Spending",
+    total_revenue = "Total Revenue",
+    average_satisfaction = "Average Satisfaction",
+    average_purchases = "Average Purchases"
+  ) |>
+  fmt_number(
+    columns = c(customers, average_satisfaction, average_purchases),
+    decimals = 2
+  ) |>
+  fmt_currency(
+    columns = c(average_spending, total_revenue),
+    currency = "USD",
+    decimals = 2
+  ) |>
+  data_color(
+    columns = average_satisfaction,
+    palette = c("white", "lightgreen")
+  ) |>
+  tab_footnote(
+    footnote = "Average monthly spending is calculated across all customers in each segment.",
+    locations = cells_column_labels(columns = average_spending)
+  ) |>
+  tab_footnote(
+    footnote = "Customer satisfaction is measured using a five-point scale.",
+    locations = cells_column_labels(columns = average_satisfaction)
+  ) |>
+  tab_source_note(
+    source_note = "Source: Synthetic marketing data created for demonstration purposes."
+  ) |>
+  opt_table_font(
+    font = list(
+      google_font("Roboto"),
+      default_fonts()
+    )
+  )
+```
+
+# Prompt 3.3: Explain why the table is worth adding to your MSDM project written report or presentation slides.
+
+The table created with the `{gt}` and `{gtExtras}` packages would be worth adding to an MSDM project because it summarizes important information in a professional and easy to read format. Instead of presenting only raw numbers, the table organizes the data into meaningful categories and highlights key metrics using formatting and visual elements. 
